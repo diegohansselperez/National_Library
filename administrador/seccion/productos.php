@@ -5,34 +5,25 @@ $txtNombre = (isset($_POST["nombre"])) ? $_POST["nombre"] : "";
 $txtImagen = (isset($_FILES["imagen"]["name"])) ? $_FILES["imagen"]["name"] : "";
 $accion = (isset($_POST["accion"])) ? $_POST["accion"] : "";
 
-
-echo $txtId . "<br/>";
-echo $txtNombre . "<br/>";
-
-echo $txtImagen . "<br/>";
-echo $accion . "<br/>";
-
-$localhost = "localhost";
-$bd = "national_library";
-$usuario = "root";
-$contraseña = "";
-
-try {
-    $canexion = new PDO("mysql:host=$localhost;dbname=$bd", $usuario, $contraseña);
-    if ($canexion) {
-        echo "Conectado al sistema";
-    }
-} catch (Exception $ex) {
-    echo $ex->getMessage();
-}
+include("../config/database.php");
 
 switch ($accion) {
     case "agregar":
         //INSERT INTO `libros` (`ID`, `NOMBRE`, `IMAGEN`) VALUES (NULL, 'Javascript 1.0', 'javascript_image.jpg');
-        $sentenciaSQL = $conexion->prepare("INSERT INTO `libros` (`ID`, `NOMBRE`, `IMAGEN`) VALUES (NULL, 'Javascript 1.0', 'javascript_image.jpg')");
+        
+                                   //comando de MySql
+        $sentenciaSQL = $conexion->prepare("INSERT INTO libros (NOMBRE,IMAGEN) VALUES (:NOMBRE,:IMAGEN);");
+        if (!$conexion) {
+            die("Error al conectar a la base de datos");
+        }              
+                        //comando de MySql
+        $sentenciaSQL->bindParam(":NOMBRE", $txtNombre);
+        $sentenciaSQL->bindParam(":IMAGEN", $txtImagen);
+
+                        //comando de MySql
         $sentenciaSQL->execute();
 
-        echo "Presionar boton agregar";
+
         break;
     case "modificar":
         echo "Presionar boton modificar";
@@ -42,6 +33,9 @@ switch ($accion) {
         break;
 }
 
+$sentenciaSQL = $conexion->prepare("SELECT * FROM libros");
+$sentenciaSQL ->execute();
+$listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 <div class="col-md-5">
@@ -88,13 +82,16 @@ switch ($accion) {
             </tr>
         </thead>
         <tbody>
-
+          <?php foreach($listaLibros as $libro){ ?>
+            
             <tr>
-                <td>2</td>
-                <td>Aprende Java</td>
-                <td>Imagen.jpg</td>
+                <td><?php echo $libro['ID']; ?></td>
+                <td><?php echo $libro['NOMBRE']; ?></td>
+                <td><?php echo $libro['IMAGEN']; ?></td>
                 <td>Selecionar | Boorar</td>
             </tr>
+            <?php }?>
+            
         </tbody>
     </table>
 </div>
