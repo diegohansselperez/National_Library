@@ -18,6 +18,7 @@ switch ($accion) {
         $sentenciaSQL->bindParam(":nombre", $txtNombre);
         $fecha = new DateTime();
         $nombreDelArchivo = ($txtImagen != '') ? $fecha->getTimestamp() . "_" . $_FILES["imagen"]["name"] : "imagen.jpg";
+
         $tmpImagen = $_FILES["imagen"]["tmp_name"];
         if ($tmpImagen != '') {
             move_uploaded_file($tmpImagen, "../../img/" . $nombreDelArchivo);
@@ -34,11 +35,29 @@ switch ($accion) {
         $sentenciaSQL->bindParam(":nombre", $txtNombre);
         $sentenciaSQL->bindParam(":id", $txtId);
         $sentenciaSQL->execute();
-        
+
 
         if ($txtImagen != "") {
+            $fecha = new DateTime();
+            $nombreDelArchivo = ($txtImagen != '') ? $fecha->getTimestamp() . "_" . $_FILES["imagen"]["name"] : "imagen.jpg";
+
+            $tmpImagen = $_FILES["imagen"]["tmp_name"];
+            move_uploaded_file($tmpImagen, "../../img/" . $nombreDelArchivo);
+
+            //Eliminamos la imagen anterior
+            $sentenciaSQL = $conexion->prepare("SELECT imagen FROM libros2 WHERE id=:id");
+            $sentenciaSQL->bindParam(":id", $txtId);
+            $sentenciaSQL->execute();
+            $libro = $sentenciaSQL->fetch(PDO::FETCH_LAZY);
+
+            if (isset($libro["imagen"]) && $libro["imagen"] != "imagen.jpg") {
+                if (file_exists("../../img/" . $libro["imagen"])) {
+                    unlink("../../img/" . $libro["imagen"]);
+                }
+            }
+            //Selecionamos la imagen nueva
             $sentenciaSQL = $conexion->prepare("UPDATE libros2 SET imagen=:imagen WHERE id=:id");
-            $sentenciaSQL->bindParam(":imagen", $txtImagen);
+            $sentenciaSQL->bindParam(":imagen", $nombreDelArchivo);
             $sentenciaSQL->bindParam(":id", $txtId);
             $sentenciaSQL->execute();
         }
@@ -53,8 +72,6 @@ switch ($accion) {
 
 
     case "borrar":
-      
-
         $sentenciaSQL = $conexion->prepare("SELECT imagen FROM libros2 WHERE id=:id");
         $sentenciaSQL->bindParam(":id", $txtId);
         $sentenciaSQL->execute();
@@ -64,8 +81,8 @@ switch ($accion) {
             if (file_exists("../../img/" . $libro["imagen"])) {
                 unlink("../../img/" . $libro["imagen"]);
             }
-        } 
-        
+        }
+
         $sentenciaSQL = $conexion->prepare("DELETE FROM libros2 WHERE id=:id");
         $sentenciaSQL->bindParam(":id", $txtId);
         $sentenciaSQL->execute();
@@ -106,7 +123,13 @@ $listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div class="form-group">
                     <label>Imagen:</label>
-                    <?php echo $txtImagen ?>
+                    <br/>
+                    <?php
+                    if ($txtImagen != "") {
+                    ?>
+                        <img class="img-thumbnail rounded" src="../../img/<?php echo $txtImagen; ?>" alt="" width="70">
+                    <?php } ?>
+                    
                     <input type="file" class="form-control" name="imagen" id="imagen">
                 </div>
                 <div class="btn-group row" role="group" aria-label="">
@@ -138,7 +161,11 @@ $listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <td><?php echo $libro['id']; ?></td>
                     <td><?php echo $libro['nombre']; ?></td>
-                    <td><?php echo $libro['imagen']; ?></td>
+                    <td>
+                        <img class="img-thumbnail rounded" src="../../img/<?php echo $libro['imagen']; ?>" alt="" width="90">
+
+
+                    </td>
                     <td>
                         <form method="post">
                             <input type="hidden" name="id_txt" id="id_txt" value="<?php echo $libro["id"]; ?>">
