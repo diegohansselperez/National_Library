@@ -9,32 +9,82 @@ include("../config/database.php");
 
 switch ($accion) {
     case "agregar":
-        //INSERT INTO `libros` (`ID`, `NOMBRE`, `IMAGEN`) VALUES (NULL, 'Javascript 1.0', 'javascript_image.jpg');
-        
-                                   //comando de MySql
-        $sentenciaSQL = $conexion->prepare("INSERT INTO libros (NOMBRE,IMAGEN) VALUES (:NOMBRE,:IMAGEN);");
+        //comando de MySql
+        $sentenciaSQL = $conexion->prepare("INSERT INTO libros2 (nombre,imagen) VALUES (:nombre,:imagen);");
         if (!$conexion) {
             die("Error al conectar a la base de datos");
-        }              
-                        //comando de MySql
-        $sentenciaSQL->bindParam(":NOMBRE", $txtNombre);
-        $sentenciaSQL->bindParam(":IMAGEN", $txtImagen);
-
-                        //comando de MySql
+        }
+        //comando de MySql
+        $sentenciaSQL->bindParam(":nombre", $txtNombre);
+        $fecha = new DateTime();
+        $nombreDelArchivo = ($txtImagen != '') ? $fecha->getTimestamp() . "_" . $_FILES["imagen"]["name"] : "imagen.jpg";
+        $tmpImagen = $_FILES["imagen"]["tmp_name"];
+        if ($tmpImagen != '') {
+            move_uploaded_file($tmpImagen, "../../img/" . $nombreDelArchivo);
+        }
+        //comando de MySql
+        $sentenciaSQL->bindParam(":imagen", $nombreDelArchivo);
+        //comando de MySql
         $sentenciaSQL->execute();
-
-
         break;
+
+
     case "modificar":
-        echo "Presionar boton modificar";
+        $sentenciaSQL = $conexion->prepare("UPDATE libros2 SET nombre=:nombre WHERE id=:id");
+        $sentenciaSQL->bindParam(":nombre", $txtNombre);
+        $sentenciaSQL->bindParam(":id", $txtId);
+        $sentenciaSQL->execute();
+        
+
+        if ($txtImagen != "") {
+            $sentenciaSQL = $conexion->prepare("UPDATE libros2 SET imagen=:imagen WHERE id=:id");
+            $sentenciaSQL->bindParam(":imagen", $txtImagen);
+            $sentenciaSQL->bindParam(":id", $txtId);
+            $sentenciaSQL->execute();
+        }
+
+
         break;
+
+
     case "cancelar":
         echo "Presionar boton cancelar";
         break;
+
+
+    case "borrar":
+      
+
+        $sentenciaSQL = $conexion->prepare("SELECT imagen FROM libros2 WHERE id=:id");
+        $sentenciaSQL->bindParam(":id", $txtId);
+        $sentenciaSQL->execute();
+        $libro = $sentenciaSQL->fetch(PDO::FETCH_LAZY);
+
+        if (isset($libro["imagen"]) && $libro["imagen"] != "imagen.jpg") {
+            if (file_exists("../../img/" . $libro["imagen"])) {
+                unlink("../../img/" . $libro["imagen"]);
+            }
+        } 
+        
+        $sentenciaSQL = $conexion->prepare("DELETE FROM libros2 WHERE id=:id");
+        $sentenciaSQL->bindParam(":id", $txtId);
+        $sentenciaSQL->execute();
+        break;
+
+    case "seleccionar":
+        $sentenciaSQL = $conexion->prepare("SELECT * FROM libros2 WHERE id=:id");
+        $sentenciaSQL->bindParam(":id", $txtId);
+        $sentenciaSQL->execute();
+        $libro = $sentenciaSQL->fetch(PDO::FETCH_LAZY);
+
+        $txtNombre = $libro["nombre"];
+        $txtImagen = $libro["imagen"];
+
+        break;
 }
 
-$sentenciaSQL = $conexion->prepare("SELECT * FROM libros");
-$sentenciaSQL ->execute();
+$sentenciaSQL = $conexion->prepare("SELECT * FROM libros2");
+$sentenciaSQL->execute();
 $listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
@@ -47,15 +97,16 @@ $listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
             <form method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="exampleInputEmail1">ID:</label>
-                    <input type="text" class="form-control" name="id_txt" id="id_txt" aria-describedby="emailHelp" placeholder="Agrega un ID...">
+                    <input type="text" value="<?php echo $txtId; ?>" class="form-control" name="id_txt" id="id_txt" aria-describedby="emailHelp" placeholder="Agrega un ID...">
                 </div>
                 <div class="form-group">
                     <label for="exampleInputEmail1">Nombre:</label>
-                    <input type="text" class="form-control" name="nombre" id="nombre_txt" aria-describedby="emailHelp" placeholder="Agrega un Nombre...">
+                    <input type="text" class="form-control" value="<?php echo $txtNombre; ?>" name="nombre" id="nombre_txt" aria-describedby="emailHelp" placeholder="Agrega un Nombre...">
 
                 </div>
                 <div class="form-group">
                     <label>Imagen:</label>
+                    <?php echo $txtImagen ?>
                     <input type="file" class="form-control" name="imagen" id="imagen">
                 </div>
                 <div class="btn-group row" role="group" aria-label="">
@@ -82,16 +133,22 @@ $listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
             </tr>
         </thead>
         <tbody>
-          <?php foreach($listaLibros as $libro){ ?>
-            
-            <tr>
-                <td><?php echo $libro['ID']; ?></td>
-                <td><?php echo $libro['NOMBRE']; ?></td>
-                <td><?php echo $libro['IMAGEN']; ?></td>
-                <td>Selecionar | Boorar</td>
-            </tr>
-            <?php }?>
-            
+            <?php foreach ($listaLibros as $libro) { ?>
+
+                <tr>
+                    <td><?php echo $libro['id']; ?></td>
+                    <td><?php echo $libro['nombre']; ?></td>
+                    <td><?php echo $libro['imagen']; ?></td>
+                    <td>
+                        <form method="post">
+                            <input type="hidden" name="id_txt" id="id_txt" value="<?php echo $libro["id"]; ?>">
+                            <input type="submit" name="accion" value="borrar" class="btn btn-danger">
+                            <input type="submit" name="accion" value="seleccionar" class="btn btn-primary">
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+
         </tbody>
     </table>
 </div>
