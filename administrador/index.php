@@ -1,7 +1,17 @@
-<?php 
-    if($_POST){
-        header("Location:inicio.php");
+<?php
+session_start();
+
+if ($_POST) {
+    if ($_POST["user"] == "diegoperez24" && $_POST["password"] == "holamundo") {
+        $_SESSION["usuario"] = "OK"; // Cambia '==' a '=' para asignar el valor a la variable de sesión
+        $_SESSION["nombreUsuario"] = "diegoperez24"; // Cambia '==' a '=' aquí también
+        header("Location: inicio.php");
+        exit(); // Asegúrate de salir del script después de la redirección
+    } else {
+        $mensajeError = "Error: El usuario o contraseña son incorrectos.";
     }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,12 +30,17 @@
     <main class="row m-0 py-5">
 
         <div class="d-flex flex-column gap-4 col-md-12 h-100 justify-content-center align-items-center m-0 p-0">
-            
-        <h5>Login Administrador</h5>
+
+            <h5>Login Administrador</h5>
+            <?php if (isset($mensajeError)) { ?>
+                <div class="alert alert-danger text-danger" role="alert">
+                   <?php echo $mensajeError; ?>
+                </div>
+            <?php } ?>
             <form method="POST" class="col-sm-6 col-md-6 col-lg-3 bg-dark text-white  border px-4 py-3 rounded-2">
                 <!-- Email input -->
                 <div class="form-outline mb-4">
-                    <input type="email" id="form2Example1" name="user" class="form-control" placeholder="Enter you user..." />
+                    <input type="text" id="form2Example1" name="user" class="form-control" placeholder="Enter you user..." />
                     <label class="form-label" for="form2Example1">User</label>
                 </div>
 
@@ -52,7 +67,7 @@
                 </div>
 
                 <!-- Submit button -->
-                <button type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
+                <button type="submit" class="btn btn-primary btn-block mb-1">Sign in</button>
 
 
             </form>

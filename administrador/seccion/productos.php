@@ -27,6 +27,8 @@ switch ($accion) {
         $sentenciaSQL->bindParam(":imagen", $nombreDelArchivo);
         //comando de MySql
         $sentenciaSQL->execute();
+
+        header("Location:productos.php");
         break;
 
 
@@ -62,12 +64,14 @@ switch ($accion) {
             $sentenciaSQL->execute();
         }
 
-
+        header("Location:productos.php");
         break;
 
 
     case "cancelar":
-        echo "Presionar boton cancelar";
+        
+        header("Location:productos.php");
+
         break;
 
 
@@ -86,6 +90,7 @@ switch ($accion) {
         $sentenciaSQL = $conexion->prepare("DELETE FROM libros2 WHERE id=:id");
         $sentenciaSQL->bindParam(":id", $txtId);
         $sentenciaSQL->execute();
+        header("Location:productos.php");
         break;
 
     case "seleccionar":
@@ -114,11 +119,11 @@ $listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
             <form method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="exampleInputEmail1">ID:</label>
-                    <input type="text" value="<?php echo $txtId; ?>" class="form-control" name="id_txt" id="id_txt" aria-describedby="emailHelp" placeholder="Agrega un ID...">
+                    <input type="text" required readonly value="<?php echo $txtId; ?>" class="form-control" name="id_txt" id="id_txt" aria-describedby="emailHelp" placeholder="Agrega un ID...">
                 </div>
                 <div class="form-group">
                     <label for="exampleInputEmail1">Nombre:</label>
-                    <input type="text" class="form-control" value="<?php echo $txtNombre; ?>" name="nombre" id="nombre_txt" aria-describedby="emailHelp" placeholder="Agrega un Nombre...">
+                    <input type="text"  required class="form-control"  value="<?php echo ($accion)=="modificar"? "": $txtNombre; ?>" name="nombre" id="nombre_txt" aria-describedby="emailHelp" placeholder="Agrega un Nombre...">
 
                 </div>
                 <div class="form-group">
@@ -133,9 +138,9 @@ $listaLibros = $sentenciaSQL->fetchAll(PDO::FETCH_ASSOC);
                     <input type="file" class="form-control" name="imagen" id="imagen">
                 </div>
                 <div class="btn-group row" role="group" aria-label="">
-                    <button type="submit" name="accion" value="agregar" class="rounded my-1 mx-sm-1 col-sm-auto col-md-auto btn btn-success">Agregar</button>
-                    <button type="submit" name="accion" value="modificar" class=" rounded my-1 mx-sm-1 col-sm-auto col-md-auto btn btn-warning">Modificar</button>
-                    <button type="submit" name="accion" value="cancelar" class=" rounded my-1 mx-sm-1 col-sm-auto col-md-auto btn btn-info">Cancelar</button>
+                    <button type="submit" name="accion" <?php echo ($accion)=="seleccionar"? "disabled": null; ?> value="agregar" class="rounded my-1 mx-sm-1 col-sm-auto col-md-auto btn btn-success">Agregar</button>
+                    <button type="submit" name="accion" <?php echo ($accion)!="seleccionar"? "disabled": null; ?> value="modificar" class=" rounded my-1 mx-sm-1 col-sm-auto col-md-auto btn btn-warning">Modificar</button>
+                    <button type="submit" name="accion" <?php echo ($accion)!="seleccionar"? "disabled": null; ?> value="cancelar" class=" rounded my-1 mx-sm-1 col-sm-auto col-md-auto btn btn-info">Cancelar</button>
                 </div>
             </form>
         </div>
